@@ -30,6 +30,13 @@ class Todo {
   }
 
   factory Todo.fromMap(Map<String, dynamic> map) {
+    // Safe priority parsing with bounds checking
+    Priority priority = Priority.medium; // Default to medium priority
+    final priorityIndex = map['priority'] as int? ?? Priority.medium.index;
+    if (priorityIndex >= 0 && priorityIndex < Priority.values.length) {
+      priority = Priority.values[priorityIndex];
+    }
+    
     return Todo(
       id: map['id'],
       title: map['title'],
@@ -38,7 +45,7 @@ class Todo {
       dueDate: map['dueDate'] != null
           ? DateTime.fromMillisecondsSinceEpoch(map['dueDate'])
           : null,
-      priority: Priority.values[map['priority']],
+      priority: priority,
       isCompleted: map['isCompleted'] == 1,
     );
   }

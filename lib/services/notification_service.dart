@@ -77,8 +77,11 @@ class NotificationService {
       final reminderTime = todo.dueDate!.subtract(const Duration(hours: 1));
 
       if (reminderTime.isAfter(DateTime.now())) {
+        // Generate unique ID if todo.id is null
+        final notificationId = todo.id ?? todo.title.hashCode.abs();
+        
         await scheduleNotification(
-          id: todo.id ?? 0,
+          id: notificationId,
           title: 'Task Reminder',
           body: 'Task "${todo.title}" is due in 1 hour',
           scheduledDate: reminderTime,

@@ -65,11 +65,10 @@ class TodoProvider with ChangeNotifier {
         _todos[index] = todo;
 
         // Update notification
-        if (todo.id != null) {
-          await _notificationService.cancelNotification(todo.id!);
-          if (todo.dueDate != null && !todo.isCompleted) {
-            await _notificationService.scheduleTaskReminder(todo);
-          }
+        final notificationId = todo.id ?? todo.title.hashCode.abs();
+        await _notificationService.cancelNotification(notificationId);
+        if (todo.dueDate != null && !todo.isCompleted) {
+          await _notificationService.scheduleTaskReminder(todo);
         }
 
         _applyFilters();
@@ -82,8 +81,13 @@ class TodoProvider with ChangeNotifier {
 
   Future<void> deleteTodo(int id) async {
     try {
+      final todoToDelete = _todos.firstWhere((todo) => todo.id == id);
       await _databaseService.deleteTodo(id);
-      await _notificationService.cancelNotification(id);
+      
+      // Use consistent notification ID generation
+      final notificationId = todoToDelete.id ?? todoToDelete.title.hashCode.abs();
+      await _notificationService.cancelNotification(notificationId);
+      
       _todos.removeWhere((todo) => todo.id == id);
       _applyFilters();
       notifyListeners();
