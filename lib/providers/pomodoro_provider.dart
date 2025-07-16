@@ -100,7 +100,12 @@ class PomodoroProvider with ChangeNotifier {
       notificationTitle = 'Time to Focus!';
       notificationBody = 'Break is over. Start your next Pomodoro.';
     }
-    NotificationService().showPomodoroNotification(id: 0, title: notificationTitle, body: notificationBody);
+    // Show notification for session completion
+    NotificationService().showInstantNotification(
+      id: DateTime.now().millisecondsSinceEpoch % 1000000, // Generate unique ID
+      title: notificationTitle, 
+      body: notificationBody
+    );
     startTimer(); // Automatically start next session
   }
 
