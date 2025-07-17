@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import '../models/todo_model.dart';
 import '../services/database_service.dart';
 import '../services/notification_service.dart';
+import 'dart:collection';
 
 class TodoProvider with ChangeNotifier {
   final DatabaseService _databaseService = DatabaseService();
@@ -14,7 +15,7 @@ class TodoProvider with ChangeNotifier {
   bool? _filterCompleted;
   bool _isLoading = false;
 
-  List<Todo> get todos => _filteredTodos;
+  UnmodifiableListView<Todo> get todos => UnmodifiableListView(_filteredTodos);
   String get searchQuery => _searchQuery;
   Priority? get filterPriority => _filterPriority;
   bool? get filterCompleted => _filterCompleted;
