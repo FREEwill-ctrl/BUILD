@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import '../models/todo_model.dart';
 import '../services/database_service.dart';
 import '../services/notification_service.dart';
+import 'dart:collection';
 
 class TodoProvider with ChangeNotifier {
   final DatabaseService _databaseService = DatabaseService();
@@ -14,7 +15,7 @@ class TodoProvider with ChangeNotifier {
   bool? _filterCompleted;
   bool _isLoading = false;
 
-  List<Todo> get todos => _filteredTodos;
+  UnmodifiableListView<Todo> get todos => UnmodifiableListView(_filteredTodos);
   String get searchQuery => _searchQuery;
   Priority? get filterPriority => _filterPriority;
   bool? get filterCompleted => _filterCompleted;
@@ -51,7 +52,7 @@ class TodoProvider with ChangeNotifier {
       _todos = await _databaseService.getAllTodos();
       _applyFilters();
     } catch (e) {
-      print('Error loading todos: $e');
+      debugPrint('Error loading todos: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -72,7 +73,7 @@ class TodoProvider with ChangeNotifier {
       _applyFilters();
       notifyListeners();
     } catch (e) {
-      print('Error adding todo: $e');
+      debugPrint('Error adding todo: $e');
     }
   }
 
@@ -95,7 +96,7 @@ class TodoProvider with ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      print('Error updating todo: $e');
+      debugPrint('Error updating todo: $e');
     }
   }
 
@@ -107,7 +108,7 @@ class TodoProvider with ChangeNotifier {
       _applyFilters();
       notifyListeners();
     } catch (e) {
-      print('Error deleting todo: $e');
+      debugPrint('Error deleting todo: $e');
     }
   }
 
@@ -191,7 +192,7 @@ class TodoProvider with ChangeNotifier {
     try {
       return await _databaseService.getTodoById(id);
     } catch (e) {
-      print('Error getting todo by id: $e');
+      debugPrint('Error getting todo by id: $e');
       return null;
     }
   }

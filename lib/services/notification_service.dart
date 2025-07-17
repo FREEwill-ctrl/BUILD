@@ -3,6 +3,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart'
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
 import '../models/todo_model.dart';
+import 'package:flutter/foundation.dart';
 
 class NotificationService {
   static NotificationService? _instance;
@@ -41,7 +42,7 @@ class NotificationService {
 
   Future<void> _createNotificationChannels() async {
     try {
-      print('Creating notification channels...');
+      debugPrint('Creating notification channels...');
       
       // Create Pomodoro notification channel
       const fln.AndroidNotificationChannel pomodoroChannel = fln.AndroidNotificationChannel(
@@ -57,7 +58,7 @@ class NotificationService {
           .resolvePlatformSpecificImplementation<fln.AndroidFlutterLocalNotificationsPlugin>()
           ?.createNotificationChannel(pomodoroChannel);
 
-      print('Pomodoro notification channel created successfully');
+      debugPrint('Pomodoro notification channel created successfully');
 
       // Create Todo notification channel
       const fln.AndroidNotificationChannel todoChannel = fln.AndroidNotificationChannel(
@@ -72,15 +73,15 @@ class NotificationService {
           .resolvePlatformSpecificImplementation<fln.AndroidFlutterLocalNotificationsPlugin>()
           ?.createNotificationChannel(todoChannel);
 
-      print('Todo notification channel created successfully');
+      debugPrint('Todo notification channel created successfully');
     } catch (e) {
-      print('Error creating notification channels: $e');
+      debugPrint('Error creating notification channels: $e');
     }
   }
 
   void _onDidReceiveNotificationResponse(fln.NotificationResponse response) {
     // Handle notification tap
-    print('Notification tapped: ${response.payload}');
+    debugPrint('Notification tapped: ${response.payload}');
   }
 
   Future<void> scheduleNotification({
@@ -170,7 +171,7 @@ class NotificationService {
     required String body,
   }) async {
     try {
-      print('Showing Pomodoro notification: $title - $body');
+      debugPrint('Showing Pomodoro notification: $title - $body');
       
       final fln.AndroidNotificationDetails androidPlatformChannelSpecifics =
           fln.AndroidNotificationDetails(
@@ -197,12 +198,12 @@ class NotificationService {
         platformChannelSpecifics,
       );
       
-      print('Pomodoro notification sent successfully');
+      debugPrint('Pomodoro notification sent successfully');
     } catch (e) {
-      print('Error showing Pomodoro notification: $e');
+      debugPrint('Error showing Pomodoro notification: $e');
       // Fallback: try without custom sound
       try {
-        print('Trying fallback notification without custom sound...');
+        debugPrint('Trying fallback notification without custom sound...');
         final fln.AndroidNotificationDetails fallbackDetails =
             fln.AndroidNotificationDetails(
           'pomodoro_channel',
@@ -227,9 +228,9 @@ class NotificationService {
           fallbackPlatformDetails,
         );
         
-        print('Fallback notification sent successfully');
+        debugPrint('Fallback notification sent successfully');
       } catch (fallbackError) {
-        print('Error showing fallback notification: $fallbackError');
+        debugPrint('Error showing fallback notification: $fallbackError');
       }
     }
   }
