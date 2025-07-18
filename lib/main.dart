@@ -2,7 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/todo_provider.dart';
 import 'providers/pomodoro_provider.dart';
+import 'providers/category_provider.dart';
+import 'providers/time_tracking_provider.dart';
+import 'providers/gamification_provider.dart';
+import 'providers/goals_provider.dart';
 import 'services/notification_service.dart';
+import 'services/database_service.dart';
 import 'screens/home_screen.dart';
 import 'utils/constants.dart';
 import 'package:quick_actions/quick_actions.dart';
@@ -17,6 +22,9 @@ void main() async {
   
   // Initialize notification service
   await NotificationService().initialize();
+  
+  // Initialize database with default data
+  await DatabaseService().initializeDefaultData();
   
   runApp(const MyApp());
 }
@@ -82,6 +90,10 @@ class _MyAppState extends State<MyApp> {
       providers: [
         ChangeNotifierProvider(create: (_) => TodoProvider()),
         ChangeNotifierProvider(create: (_) => PomodoroProvider()),
+        ChangeNotifierProvider(create: (_) => CategoryProvider()),
+        ChangeNotifierProvider(create: (_) => TimeTrackingProvider()),
+        ChangeNotifierProvider(create: (_) => GamificationProvider()),
+        ChangeNotifierProvider(create: (_) => GoalsProvider()),
       ],
       child: MaterialApp(
         navigatorKey: navigatorKey,

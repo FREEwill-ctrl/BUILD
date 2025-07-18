@@ -1,3 +1,7 @@
+import 'category_model.dart';
+import 'tag_model.dart';
+import 'recurring_model.dart';
+
 class Todo {
   final int? id;
   final String title;
@@ -6,6 +10,14 @@ class Todo {
   final DateTime? dueDate;
   final Priority priority;
   final bool isCompleted;
+  final int? categoryId;
+  final List<int> tagIds;
+  final int? recurrenceRuleId;
+  final int? parentRecurringId;
+  final String? richDescription;
+  final DateTime? completedAt;
+  final int estimatedDuration; // in minutes
+  final int? actualDuration; // in minutes
 
   Todo({
     this.id,
@@ -15,6 +27,14 @@ class Todo {
     this.dueDate,
     required this.priority,
     this.isCompleted = false,
+    this.categoryId,
+    this.tagIds = const [],
+    this.recurrenceRuleId,
+    this.parentRecurringId,
+    this.richDescription,
+    this.completedAt,
+    this.estimatedDuration = 0,
+    this.actualDuration,
   });
 
   Map<String, dynamic> toMap() {
@@ -26,6 +46,14 @@ class Todo {
       'dueDate': dueDate?.millisecondsSinceEpoch,
       'priority': priority.index,
       'isCompleted': isCompleted ? 1 : 0,
+      'categoryId': categoryId,
+      'tagIds': tagIds.join(','),
+      'recurrenceRuleId': recurrenceRuleId,
+      'parentRecurringId': parentRecurringId,
+      'richDescription': richDescription,
+      'completedAt': completedAt?.millisecondsSinceEpoch,
+      'estimatedDuration': estimatedDuration,
+      'actualDuration': actualDuration,
     };
   }
 
@@ -40,6 +68,18 @@ class Todo {
           : null,
       priority: Priority.values[map['priority']],
       isCompleted: map['isCompleted'] == 1,
+      categoryId: map['categoryId'],
+      tagIds: map['tagIds'] != null && map['tagIds'].isNotEmpty
+          ? map['tagIds'].split(',').map<int>((e) => int.parse(e)).toList()
+          : [],
+      recurrenceRuleId: map['recurrenceRuleId'],
+      parentRecurringId: map['parentRecurringId'],
+      richDescription: map['richDescription'],
+      completedAt: map['completedAt'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(map['completedAt'])
+          : null,
+      estimatedDuration: map['estimatedDuration'] ?? 0,
+      actualDuration: map['actualDuration'],
     );
   }
 
@@ -51,6 +91,14 @@ class Todo {
     DateTime? dueDate,
     Priority? priority,
     bool? isCompleted,
+    int? categoryId,
+    List<int>? tagIds,
+    int? recurrenceRuleId,
+    int? parentRecurringId,
+    String? richDescription,
+    DateTime? completedAt,
+    int? estimatedDuration,
+    int? actualDuration,
   }) {
     return Todo(
       id: id ?? this.id,
@@ -60,6 +108,14 @@ class Todo {
       dueDate: dueDate ?? this.dueDate,
       priority: priority ?? this.priority,
       isCompleted: isCompleted ?? this.isCompleted,
+      categoryId: categoryId ?? this.categoryId,
+      tagIds: tagIds ?? this.tagIds,
+      recurrenceRuleId: recurrenceRuleId ?? this.recurrenceRuleId,
+      parentRecurringId: parentRecurringId ?? this.parentRecurringId,
+      richDescription: richDescription ?? this.richDescription,
+      completedAt: completedAt ?? this.completedAt,
+      estimatedDuration: estimatedDuration ?? this.estimatedDuration,
+      actualDuration: actualDuration ?? this.actualDuration,
     );
   }
 }
