@@ -665,10 +665,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
             ),
             FilledButton(
-              onPressed: () {
-                provider.deleteTodo(todo);
-                Navigator.of(context).pop();
-              },
+                             onPressed: () {
+                 provider.deleteTodo(todo.id!);
+                 Navigator.of(context).pop();
+               },
               style: FilledButton.styleFrom(
                 backgroundColor: AppConstants.errorColor,
               ),
