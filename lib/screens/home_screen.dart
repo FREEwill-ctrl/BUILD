@@ -284,41 +284,50 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Image.asset(
-            imagePath,
-            width: 200,
-            height: 200,
-            fit: BoxFit.contain,
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(AppConstants.paddingMedium),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxWidth: 150,
+                  maxHeight: 150,
+                ),
+                child: Image.asset(
+                  imagePath,
+                  fit: BoxFit.contain,
+                ),
+              ),
+              const SizedBox(height: AppConstants.paddingMedium),
+              Text(
+                message,
+                style: AppConstants.subheadingStyle.copyWith(
+                  color: theme.colorScheme.onSurface.withOpacity(0.6),
+                ),
+              ),
+              const SizedBox(height: AppConstants.paddingSmall),
+              Text(
+                subtitle,
+                style: AppConstants.captionStyle,
+                textAlign: TextAlign.center,
+              ),
+              if (provider.searchQuery.isNotEmpty ||
+                  provider.filterPriority != null ||
+                  provider.filterCompleted != null) ...[
+                const SizedBox(height: AppConstants.paddingMedium),
+                ElevatedButton(
+                  onPressed: () {
+                    _searchController.clear();
+                    provider.clearFilters();
+                  },
+                  child: const Text('Clear Filters'),
+                ),
+              ],
+            ],
           ),
-          const SizedBox(height: AppConstants.paddingMedium),
-          Text(
-            message,
-            style: AppConstants.subheadingStyle.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.6),
-            ),
-          ),
-          const SizedBox(height: AppConstants.paddingSmall),
-          Text(
-            subtitle,
-            style: AppConstants.captionStyle,
-            textAlign: TextAlign.center,
-          ),
-          if (provider.searchQuery.isNotEmpty ||
-              provider.filterPriority != null ||
-              provider.filterCompleted != null) ...[
-            const SizedBox(height: AppConstants.paddingMedium),
-            ElevatedButton(
-              onPressed: () {
-                _searchController.clear();
-                provider.clearFilters();
-              },
-              child: const Text('Clear Filters'),
-            ),
-          ],
-        ],
+        ),
       ),
     );
   }

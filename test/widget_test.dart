@@ -23,6 +23,9 @@ void main() {
   });
 
   testWidgets('MyApp builds without crashing', (WidgetTester tester) async {
+    // Set a larger screen size for testing to avoid overflow issues
+    await tester.binding.setSurfaceSize(const Size(1200, 800));
+    
     await tester.pumpWidget(
       MultiProvider(
         providers: [
@@ -32,5 +35,8 @@ void main() {
       ),
     );
     expect(find.byType(MaterialApp), findsOneWidget);
+    
+    // Reset surface size
+    await tester.binding.setSurfaceSize(null);
   });
 }

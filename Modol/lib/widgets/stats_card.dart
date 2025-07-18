@@ -66,7 +66,7 @@ class StatsCard extends StatelessWidget {
                 const SizedBox(height: AppConstants.paddingSmall),
                 LinearProgressIndicator(
                   value: completionRate,
-                  backgroundColor: theme.colorScheme.surfaceVariant,
+                  backgroundColor: theme.colorScheme.surfaceContainerHighest,
                   valueColor: AlwaysStoppedAnimation<Color>(
                     theme.colorScheme.primary,
                   ),

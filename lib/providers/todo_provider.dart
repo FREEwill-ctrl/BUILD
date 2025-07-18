@@ -16,6 +16,7 @@ class TodoProvider with ChangeNotifier {
   int? _filterCategoryId;
   List<int> _filterTagIds = [];
   bool _isLoading = false;
+  bool _disposed = false;
 
   List<Todo> get todos => _filteredTodos;
   String get searchQuery => _searchQuery;
@@ -49,17 +50,19 @@ class TodoProvider with ChangeNotifier {
   }
 
   Future<void> loadTodos() async {
+    if (_disposed) return;
+    
     _isLoading = true;
-    notifyListeners();
+    if (!_disposed) notifyListeners();
 
     try {
       _todos = await _databaseService.getAllTodos();
-      _applyFilters();
+      if (!_disposed) _applyFilters();
     } catch (e) {
       print('Error loading todos: $e');
     } finally {
       _isLoading = false;
-      notifyListeners();
+      if (!_disposed) notifyListeners();
     }
   }
 
@@ -364,5 +367,11 @@ class TodoProvider with ChangeNotifier {
         t.dueDate != null && 
         t.dueDate!.isAfter(now) && 
         t.dueDate!.isBefore(cutoff)).toList();
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
   }
 }
