@@ -20,13 +20,38 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
   bool _showStats = true;
+  late AnimationController _headerAnimationController;
+  late AnimationController _statsAnimationController;
+  late Animation<double> _headerAnimation;
+  late Animation<double> _statsAnimation;
 
   @override
   void initState() {
     super.initState();
+    _headerAnimationController = AnimationController(
+      duration: AppConstants.mediumAnimation,
+      vsync: this,
+    );
+    _statsAnimationController = AnimationController(
+      duration: AppConstants.mediumAnimation,
+      vsync: this,
+    );
+    
+    _headerAnimation = CurvedAnimation(
+      parent: _headerAnimationController,
+      curve: Curves.easeOutCubic,
+    );
+    _statsAnimation = CurvedAnimation(
+      parent: _statsAnimationController,
+      curve: Curves.easeOutCubic,
+    );
+
+    _headerAnimationController.forward();
+    if (_showStats) _statsAnimationController.forward();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<TodoProvider>().loadTodos();
     });
@@ -35,227 +60,499 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    _headerAnimationController.dispose();
+    _statsAnimationController.dispose();
     super.dispose();
+  }
+
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'Good Morning';
+    if (hour < 17) return 'Good Afternoon';
+    return 'Good Evening';
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(AppConstants.appName),
-        actions: [
-          IconButton(
-            icon: Image.asset('assets/icons/timer.png', width: 22, height: 22),
-            tooltip: 'Pomodoro Timer',
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const PomodoroScreen(),
-                ),
-              );
-            },
-          ),
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              final provider = context.read<TodoProvider>();
-              switch (value) {
-                case 'all':
-                  provider.clearFilters();
-                  break;
-                case 'completed':
-                  provider.filterByCompleted(true);
-                  break;
-                case 'pending':
-                  provider.filterByCompleted(false);
-                  break;
-                case 'theme_light':
-                  widget.onThemeModeChanged?.call(ThemeMode.light);
-                  break;
-                case 'theme_dark':
-                  widget.onThemeModeChanged?.call(ThemeMode.dark);
-                  break;
-                case 'theme_system':
-                  widget.onThemeModeChanged?.call(ThemeMode.system);
-                  break;
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'all',
-                child: Text('All Tasks'),
-              ),
-              const PopupMenuItem(
-                value: 'pending',
-                child: Text('Pending Tasks'),
-              ),
-              const PopupMenuItem(
-                value: 'completed',
-                child: Text('Completed Tasks'),
-              ),
-              const PopupMenuDivider(),
-              PopupMenuItem(
-                value: 'theme_light',
-                child: Row(
-                  children: [
-                    Icon(Icons.light_mode, color: widget.currentThemeMode == ThemeMode.light ? Theme.of(context).colorScheme.primary : null),
-                    const SizedBox(width: 8),
-                    const Text('Light Mode'),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                value: 'theme_dark',
-                child: Row(
-                  children: [
-                    Icon(Icons.dark_mode, color: widget.currentThemeMode == ThemeMode.dark ? Theme.of(context).colorScheme.primary : null),
-                    const SizedBox(width: 8),
-                    const Text('Dark Mode'),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                value: 'theme_system',
-                child: Row(
-                  children: [
-                    Icon(Icons.brightness_auto, color: widget.currentThemeMode == ThemeMode.system ? Theme.of(context).colorScheme.primary : null),
-                    const SizedBox(width: 8),
-                    const Text('System Default'),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          IconButton(
-            icon: Icon(_showStats ? Icons.visibility_off : Icons.visibility),
-            onPressed: () {
-              setState(() {
-                _showStats = !_showStats;
-              });
-            },
-            tooltip: _showStats ? 'Hide Stats' : 'Show Stats',
-          ),
-        ],
-      ),
-      body: Consumer<TodoProvider>(
-        builder: (context, todoProvider, child) {
-          if (todoProvider.isLoading) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
-
-          return Column(
-            children: [
-              // Stats Card
-              if (_showStats)
-                Padding(
-                  padding: const EdgeInsets.all(AppConstants.paddingMedium),
-                  child: StatsCard(
-                    totalTodos: todoProvider.totalTodos,
-                    completedTodos: todoProvider.completedTodos,
-                    pendingTodos: todoProvider.pendingTodos,
-                  ),
-                ),
-
-              // Search Bar
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppConstants.paddingMedium,
-                ),
-                child: TextField(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    hintText: 'Search tasks...',
-                    prefixIcon: const Icon(Icons.search),
-                    suffixIcon: _searchController.text.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.clear),
-                            onPressed: () {
-                              _searchController.clear();
-                              todoProvider.searchTodos('');
-                            },
-                          )
-                        : null,
-                  ),
-                  onChanged: (value) {
-                    todoProvider.searchTodos(value);
-                  },
-                ),
-              ),
-
-              // Priority Filter
-              Padding(
-                padding: const EdgeInsets.all(AppConstants.paddingMedium),
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      // All filter
-                      PriorityChip(
-                        priority: Priority.low, // Dummy priority for "All"
-                        isSelected: todoProvider.filterPriority == null,
-                        onTap: () => todoProvider.filterByPriority(null),
-                      ),
-                      const SizedBox(width: AppConstants.paddingSmall),
-                      // Priority filters
-                      ...Priority.values.map((priority) => Padding(
-                            padding: const EdgeInsets.only(
-                                right: AppConstants.paddingSmall),
-                            child: PriorityChip(
-                              priority: priority,
-                              isSelected:
-                                  todoProvider.filterPriority == priority,
-                              onTap: () =>
-                                  todoProvider.filterByPriority(priority),
-                            ),
-                          )),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Task List
-              Expanded(
-                child: todoProvider.todos.isEmpty
-                    ? _buildEmptyState(context)
-                    : ListView.builder(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppConstants.paddingMedium,
+      body: CustomScrollView(
+        slivers: [
+          // Beautiful App Bar with Gradient
+          SliverAppBar(
+            expandedHeight: 140,
+            floating: true,
+            pinned: true,
+            elevation: 0,
+            backgroundColor: Colors.transparent,
+            flexibleSpace: AnimatedBuilder(
+              animation: _headerAnimation,
+              builder: (context, child) {
+                return Transform.translate(
+                  offset: Offset(0, 20 * (1 - _headerAnimation.value)),
+                  child: Opacity(
+                    opacity: _headerAnimation.value,
+                    child: FlexibleSpaceBar(
+                      background: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: isDark
+                                ? [
+                                    AppConstants.primaryColor.withOpacity(0.1),
+                                    AppConstants.secondaryColor.withOpacity(0.1),
+                                  ]
+                                : [
+                                    AppConstants.primaryColor.withOpacity(0.05),
+                                    AppConstants.secondaryColor.withOpacity(0.05),
+                                  ],
+                          ),
                         ),
-                        itemCount: todoProvider.todos.length,
-                        itemBuilder: (context, index) {
-                          final todo = todoProvider.todos[index];
-                          return TaskCard(
-                            todo: todo,
-                            onTap: () => _showTaskDetails(context, todo),
-                            onToggleComplete: () {
-                              final wasCompleted = todo.isCompleted;
-                              todoProvider.toggleTodoComplete(todo);
+                        child: SafeArea(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppConstants.spacing20,
+                              vertical: AppConstants.spacing16,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            _getGreeting(),
+                                            style: AppConstants.bodyMedium.copyWith(
+                                              color: theme.colorScheme.onSurface.withOpacity(0.7),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            AppConstants.appName,
+                                            style: AppConstants.headlineSmall.copyWith(
+                                              color: theme.colorScheme.onSurface,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Row(
+                                      children: [
+                                        _buildHeaderButton(
+                                          icon: Icons.timer_outlined,
+                                          tooltip: 'Pomodoro Timer',
+                                          onPressed: () {
+                                            Navigator.of(context).push(
+                                              MaterialPageRoute(
+                                                builder: (context) => const PomodoroScreen(),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                        const SizedBox(width: AppConstants.spacing8),
+                                        _buildThemeMenu(),
+                                        const SizedBox(width: AppConstants.spacing8),
+                                        _buildHeaderButton(
+                                          icon: _showStats ? Icons.visibility_off : Icons.visibility,
+                                          tooltip: _showStats ? 'Hide Stats' : 'Show Stats',
+                                          onPressed: () {
+                                            setState(() {
+                                              _showStats = !_showStats;
+                                              if (_showStats) {
+                                                _statsAnimationController.forward();
+                                              } else {
+                                                _statsAnimationController.reverse();
+                                              }
+                                            });
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          
+          // Content
+          SliverToBoxAdapter(
+            child: Consumer<TodoProvider>(
+              builder: (context, todoProvider, child) {
+                if (todoProvider.isLoading) {
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(AppConstants.spacing48),
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
+                }
 
-                              // Show celebration if task was just completed
-                              if (!wasCompleted && !todo.isCompleted) {
-                                Future.delayed(
-                                    const Duration(milliseconds: 300), () {
-                                  if (mounted) {
-                                    showCelebration(context);
-                                  }
-                                });
-                              }
-                            },
-                            onEdit: () => _editTask(context, todo),
-                            onDelete: () =>
-                                _deleteTask(context, todo, todoProvider),
+                return Column(
+                  children: [
+                    // Stats Card with Animation
+                    if (_showStats)
+                      AnimatedBuilder(
+                        animation: _statsAnimation,
+                        builder: (context, child) {
+                          return Transform.scale(
+                            scale: 0.8 + (0.2 * _statsAnimation.value),
+                            child: Opacity(
+                              opacity: _statsAnimation.value,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: AppConstants.spacing20,
+                                  vertical: AppConstants.spacing8,
+                                ),
+                                child: StatsCard(
+                                  totalTodos: todoProvider.totalTodos,
+                                  completedTodos: todoProvider.completedTodos,
+                                  pendingTodos: todoProvider.pendingTodos,
+                                ),
+                              ),
+                            ),
                           );
                         },
                       ),
-              ),
-            ],
-          );
-        },
+
+                    // Search Bar with Enhanced Design
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppConstants.spacing20,
+                        vertical: AppConstants.spacing16,
+                      ),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(AppConstants.radiusXL),
+                          boxShadow: [
+                            BoxShadow(
+                              color: theme.colorScheme.primary.withOpacity(0.1),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: TextField(
+                          controller: _searchController,
+                          decoration: InputDecoration(
+                            hintText: 'Search tasks...',
+                            hintStyle: AppConstants.bodyMedium.copyWith(
+                              color: theme.colorScheme.onSurface.withOpacity(0.5),
+                            ),
+                            prefixIcon: Container(
+                              padding: const EdgeInsets.all(AppConstants.spacing12),
+                              child: Icon(
+                                Icons.search_rounded,
+                                color: theme.colorScheme.primary,
+                                size: 20,
+                              ),
+                            ),
+                            suffixIcon: _searchController.text.isNotEmpty
+                                ? IconButton(
+                                    icon: Icon(
+                                      Icons.clear_rounded,
+                                      color: theme.colorScheme.onSurface.withOpacity(0.5),
+                                    ),
+                                    onPressed: () {
+                                      _searchController.clear();
+                                      todoProvider.searchTodos('');
+                                    },
+                                  )
+                                : null,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(AppConstants.radiusXL),
+                              borderSide: BorderSide.none,
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(AppConstants.radiusXL),
+                              borderSide: BorderSide.none,
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(AppConstants.radiusXL),
+                              borderSide: BorderSide(
+                                color: theme.colorScheme.primary,
+                                width: 2,
+                              ),
+                            ),
+                            filled: true,
+                            fillColor: theme.colorScheme.surface,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: AppConstants.spacing20,
+                              vertical: AppConstants.spacing16,
+                            ),
+                          ),
+                          onChanged: (value) {
+                            todoProvider.searchTodos(value);
+                          },
+                        ),
+                      ),
+                    ),
+
+                    // Priority Filter with Enhanced Design
+                    Container(
+                      height: 60,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: AppConstants.spacing20),
+                        children: [
+                          // All filter with special design
+                          Container(
+                            margin: const EdgeInsets.only(right: AppConstants.spacing8),
+                            child: FilterChip(
+                              selected: todoProvider.filterPriority == null,
+                              label: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.dashboard_rounded,
+                                    size: 16,
+                                    color: todoProvider.filterPriority == null
+                                        ? theme.colorScheme.onPrimary
+                                        : theme.colorScheme.onSurface.withOpacity(0.6),
+                                  ),
+                                  const SizedBox(width: AppConstants.spacing4),
+                                  Text('All'),
+                                ],
+                              ),
+                              onSelected: (_) => todoProvider.filterByPriority(null),
+                              backgroundColor: theme.colorScheme.surface,
+                              selectedColor: theme.colorScheme.primary,
+                              checkmarkColor: theme.colorScheme.onPrimary,
+                              labelStyle: AppConstants.labelMedium.copyWith(
+                                color: todoProvider.filterPriority == null
+                                    ? theme.colorScheme.onPrimary
+                                    : theme.colorScheme.onSurface.withOpacity(0.8),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          // Priority filters
+                          ...Priority.values.map((priority) => Container(
+                                margin: const EdgeInsets.only(right: AppConstants.spacing8),
+                                child: PriorityChip(
+                                  priority: priority,
+                                  isSelected: todoProvider.filterPriority == priority,
+                                  onTap: () => todoProvider.filterByPriority(priority),
+                                ),
+                              )),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: AppConstants.spacing16),
+
+                    // Task List
+                    todoProvider.todos.isEmpty
+                        ? _buildEmptyState(context)
+                        : ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppConstants.spacing20,
+                            ),
+                            itemCount: todoProvider.todos.length,
+                            itemBuilder: (context, index) {
+                              final todo = todoProvider.todos[index];
+                              return AnimatedContainer(
+                                duration: AppConstants.shortAnimation,
+                                child: TaskCard(
+                                  todo: todo,
+                                  onTap: () => _showTaskDetails(context, todo),
+                                  onToggleComplete: () {
+                                    final wasCompleted = todo.isCompleted;
+                                    todoProvider.toggleTodoComplete(todo);
+
+                                    // Show celebration if task was just completed
+                                    if (!wasCompleted && !todo.isCompleted) {
+                                      Future.delayed(
+                                          const Duration(milliseconds: 300), () {
+                                        if (mounted) {
+                                          showCelebration(context);
+                                        }
+                                      });
+                                    }
+                                  },
+                                  onEdit: () => _editTask(context, todo),
+                                  onDelete: () =>
+                                      _deleteTask(context, todo, todoProvider),
+                                ),
+                              );
+                            },
+                          ),
+                    
+                    // Bottom padding for FAB
+                    const SizedBox(height: AppConstants.spacing64),
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _addTask(context),
-        child: Image.asset('assets/icons/add.png', width: 24, height: 24),
+      floatingActionButton: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppConstants.radiusL),
+          boxShadow: [
+            BoxShadow(
+              color: AppConstants.primaryColor.withOpacity(0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: FloatingActionButton(
+          onPressed: () => _addTask(context),
+          elevation: 0,
+          backgroundColor: AppConstants.primaryColor,
+          foregroundColor: Colors.white,
+          child: const Icon(
+            Icons.add_rounded,
+            size: 28,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeaderButton({
+    required IconData icon,
+    required String tooltip,
+    required VoidCallback onPressed,
+  }) {
+    final theme = Theme.of(context);
+    
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface.withOpacity(0.8),
+        borderRadius: BorderRadius.circular(AppConstants.radiusM),
+        border: Border.all(
+          color: theme.colorScheme.outline.withOpacity(0.2),
+        ),
+      ),
+      child: IconButton(
+        icon: Icon(icon, size: 20),
+        tooltip: tooltip,
+        onPressed: onPressed,
+        color: theme.colorScheme.onSurface,
+        splashRadius: 20,
+      ),
+    );
+  }
+
+  Widget _buildThemeMenu() {
+    final theme = Theme.of(context);
+    
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface.withOpacity(0.8),
+        borderRadius: BorderRadius.circular(AppConstants.radiusM),
+        border: Border.all(
+          color: theme.colorScheme.outline.withOpacity(0.2),
+        ),
+      ),
+      child: PopupMenuButton<String>(
+        icon: Icon(
+          Icons.more_vert_rounded,
+          size: 20,
+          color: theme.colorScheme.onSurface,
+        ),
+        tooltip: 'Menu',
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppConstants.radiusL),
+        ),
+        onSelected: (value) {
+          final provider = context.read<TodoProvider>();
+          switch (value) {
+            case 'all':
+              provider.clearFilters();
+              break;
+            case 'completed':
+              provider.filterByCompleted(true);
+              break;
+            case 'pending':
+              provider.filterByCompleted(false);
+              break;
+            case 'theme_light':
+              widget.onThemeModeChanged?.call(ThemeMode.light);
+              break;
+            case 'theme_dark':
+              widget.onThemeModeChanged?.call(ThemeMode.dark);
+              break;
+            case 'theme_system':
+              widget.onThemeModeChanged?.call(ThemeMode.system);
+              break;
+          }
+        },
+        itemBuilder: (context) => [
+          _buildMenuItem('all', 'All Tasks', Icons.list_rounded),
+          _buildMenuItem('pending', 'Pending Tasks', Icons.pending_actions_rounded),
+          _buildMenuItem('completed', 'Completed Tasks', Icons.check_circle_rounded),
+          const PopupMenuDivider(),
+          _buildThemeMenuItem('theme_light', 'Light Mode', Icons.light_mode_rounded, ThemeMode.light),
+          _buildThemeMenuItem('theme_dark', 'Dark Mode', Icons.dark_mode_rounded, ThemeMode.dark),
+          _buildThemeMenuItem('theme_system', 'System Default', Icons.brightness_auto_rounded, ThemeMode.system),
+        ],
+      ),
+    );
+  }
+
+  PopupMenuItem<String> _buildMenuItem(String value, String text, IconData icon) {
+    final theme = Theme.of(context);
+    
+    return PopupMenuItem(
+      value: value,
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: theme.colorScheme.onSurface.withOpacity(0.7)),
+          const SizedBox(width: AppConstants.spacing12),
+          Text(text, style: AppConstants.bodyMedium),
+        ],
+      ),
+    );
+  }
+
+  PopupMenuItem<String> _buildThemeMenuItem(String value, String text, IconData icon, ThemeMode mode) {
+    final theme = Theme.of(context);
+    final isSelected = widget.currentThemeMode == mode;
+    
+    return PopupMenuItem(
+      value: value,
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            size: 20,
+            color: isSelected
+                ? theme.colorScheme.primary
+                : theme.colorScheme.onSurface.withOpacity(0.7),
+          ),
+          const SizedBox(width: AppConstants.spacing12),
+          Text(
+            text,
+            style: AppConstants.bodyMedium.copyWith(
+              color: isSelected
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.onSurface,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -266,58 +563,57 @@ class _HomeScreenState extends State<HomeScreen> {
 
     String message;
     String subtitle;
-    String imagePath;
+    IconData iconData;
 
     if (provider.searchQuery.isNotEmpty) {
       message = 'No tasks found';
       subtitle = 'Try adjusting your search or filters';
-      imagePath = 'assets/images/no_search_results.png';
+      iconData = Icons.search_off_rounded;
     } else if (provider.filterPriority != null ||
         provider.filterCompleted != null) {
       message = 'No tasks match your filters';
       subtitle = 'Try clearing filters or add new tasks';
-      imagePath = 'assets/images/empty_tasks.png';
+      iconData = Icons.filter_list_off_rounded;
     } else {
       message = 'No tasks yet';
       subtitle = 'Tap the + button to add your first task';
-      imagePath = 'assets/images/empty_tasks.png';
+      iconData = Icons.task_alt_rounded;
     }
 
-    return Center(
+    return Container(
+      padding: const EdgeInsets.all(AppConstants.spacing48),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Image.asset(
-            imagePath,
-            width: 200,
-            height: 200,
-            fit: BoxFit.contain,
+          Container(
+            padding: const EdgeInsets.all(AppConstants.spacing24),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(AppConstants.radiusXXL),
+            ),
+            child: Icon(
+              iconData,
+              size: 64,
+              color: theme.colorScheme.primary.withOpacity(0.7),
+            ),
           ),
-          const SizedBox(height: AppConstants.paddingMedium),
+          const SizedBox(height: AppConstants.spacing24),
           Text(
             message,
-            style: AppConstants.subheadingStyle.copyWith(
-              color: theme.colorScheme.onSurface.withOpacity(0.6),
+            style: AppConstants.titleLarge.copyWith(
+              color: theme.colorScheme.onSurface,
+              fontWeight: FontWeight.w600,
             ),
-          ),
-          const SizedBox(height: AppConstants.paddingSmall),
-          Text(
-            subtitle,
-            style: AppConstants.captionStyle,
             textAlign: TextAlign.center,
           ),
-          if (provider.searchQuery.isNotEmpty ||
-              provider.filterPriority != null ||
-              provider.filterCompleted != null) ...[
-            const SizedBox(height: AppConstants.paddingMedium),
-            ElevatedButton(
-              onPressed: () {
-                _searchController.clear();
-                provider.clearFilters();
-              },
-              child: const Text('Clear Filters'),
+          const SizedBox(height: AppConstants.spacing8),
+          Text(
+            subtitle,
+            style: AppConstants.bodyMedium.copyWith(
+              color: theme.colorScheme.onSurface.withOpacity(0.6),
             ),
-          ],
+            textAlign: TextAlign.center,
+          ),
         ],
       ),
     );
@@ -340,34 +636,52 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _deleteTask(BuildContext context, Todo todo, TodoProvider provider) {
+    // Show confirmation dialog
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete Task'),
-        content: Text('Are you sure you want to delete "${todo.title}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppConstants.radiusL),
           ),
-          TextButton(
-            onPressed: () {
-              provider.deleteTodo(todo.id!);
-              Navigator.of(context).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Task deleted'),
-                  duration: Duration(seconds: 2),
-                ),
-              );
-            },
-            style: TextButton.styleFrom(
-              foregroundColor: AppConstants.errorColor,
+          title: Text(
+            'Delete Task',
+            style: AppConstants.titleLarge.copyWith(
+              fontWeight: FontWeight.w600,
             ),
-            child: const Text('Delete'),
           ),
-        ],
-      ),
+          content: Text(
+            'Are you sure you want to delete "${todo.title}"?',
+            style: AppConstants.bodyMedium,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                'Cancel',
+                style: AppConstants.labelLarge.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                ),
+              ),
+            ),
+            FilledButton(
+              onPressed: () {
+                provider.deleteTodo(todo);
+                Navigator.of(context).pop();
+              },
+              style: FilledButton.styleFrom(
+                backgroundColor: AppConstants.errorColor,
+              ),
+              child: Text(
+                'Delete',
+                style: AppConstants.labelLarge.copyWith(
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -375,199 +689,119 @@ class _HomeScreenState extends State<HomeScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppConstants.borderRadiusLarge),
-        ),
-      ),
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.6,
-        maxChildSize: 0.9,
-        minChildSize: 0.3,
-        expand: false,
-        builder: (context, scrollController) => _TaskDetailsSheet(
-          todo: todo,
-          scrollController: scrollController,
-          onEdit: () {
-            Navigator.of(context).pop();
-            _editTask(context, todo);
-          },
-          onDelete: () {
-            Navigator.of(context).pop();
-            _deleteTask(context, todo, context.read<TodoProvider>());
-          },
-        ),
-      ),
-    );
-  }
-}
-
-class _TaskDetailsSheet extends StatelessWidget {
-  final Todo todo;
-  final ScrollController scrollController;
-  final VoidCallback onEdit;
-  final VoidCallback onDelete;
-
-  const _TaskDetailsSheet({
-    Key? key,
-    required this.todo,
-    required this.scrollController,
-    required this.onEdit,
-    required this.onDelete,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      padding: const EdgeInsets.all(AppConstants.paddingMedium),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Handle
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.onSurface.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(AppConstants.radiusXL),
           ),
-
-          const SizedBox(height: AppConstants.paddingMedium),
-
-          // Title and Status
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  todo.title,
-                  style: AppConstants.headingStyle.copyWith(
-                    color: theme.colorScheme.onSurface,
-                  ),
-                ),
-              ),
-              if (todo.isCompleted)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppConstants.paddingSmall,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppConstants.successColor.withOpacity(0.1),
-                    borderRadius:
-                        BorderRadius.circular(AppConstants.borderRadiusSmall),
-                  ),
-                  child: Text(
-                    'Completed',
-                    style: TextStyle(
-                      color: AppConstants.successColor,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12,
+        ),
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: DraggableScrollableSheet(
+          initialChildSize: 0.7,
+          maxChildSize: 0.9,
+          minChildSize: 0.5,
+          builder: (context, scrollController) {
+            return SingleChildScrollView(
+              controller: scrollController,
+              child: Padding(
+                padding: const EdgeInsets.all(AppConstants.spacing24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Handle bar
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-            ],
-          ),
-
-          const SizedBox(height: AppConstants.paddingMedium),
-
-          // Priority
-          Row(
-            children: [
-              const Text('Priority: '),
-              PriorityChip(priority: todo.priority),
-            ],
-          ),
-
-          const SizedBox(height: AppConstants.paddingMedium),
-
-          // Description
-          if (todo.description.isNotEmpty) ...[
-            Text(
-              'Description',
-              style: AppConstants.subheadingStyle.copyWith(
-                color: theme.colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: AppConstants.paddingSmall),
-            Text(
-              todo.description,
-              style: AppConstants.bodyStyle.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.8),
-              ),
-            ),
-            const SizedBox(height: AppConstants.paddingMedium),
-          ],
-
-          // Dates
-          if (todo.dueDate != null) ...[
-            Row(
-              children: [
-                Icon(
-                  Icons.schedule,
-                  size: 20,
-                  color: theme.colorScheme.onSurface.withOpacity(0.6),
-                ),
-                const SizedBox(width: AppConstants.paddingSmall),
-                Text(
-                  'Due: ${todo.dueDate!.toString().split(' ')[0]}',
-                  style: AppConstants.bodyStyle.copyWith(
-                    color: theme.colorScheme.onSurface.withOpacity(0.8),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppConstants.paddingSmall),
-          ],
-
-          Row(
-            children: [
-              Icon(
-                Icons.access_time,
-                size: 20,
-                color: theme.colorScheme.onSurface.withOpacity(0.6),
-              ),
-              const SizedBox(width: AppConstants.paddingSmall),
-              Text(
-                'Created: ${todo.createdAt.toString().split(' ')[0]}',
-                style: AppConstants.bodyStyle.copyWith(
-                  color: theme.colorScheme.onSurface.withOpacity(0.8),
-                ),
-              ),
-            ],
-          ),
-
-          const Spacer(),
-
-          // Action Buttons
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: onEdit,
-                  icon: const Icon(Icons.edit),
-                  label: const Text('Edit'),
+                    const SizedBox(height: AppConstants.spacing24),
+                    
+                    // Task details content
+                    Text(
+                      todo.title,
+                      style: AppConstants.headlineSmall.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    if (todo.description.isNotEmpty) ...[
+                      const SizedBox(height: AppConstants.spacing16),
+                      Text(
+                        todo.description,
+                        style: AppConstants.bodyLarge,
+                      ),
+                    ],
+                    const SizedBox(height: AppConstants.spacing24),
+                    
+                    // Task metadata
+                    Wrap(
+                      spacing: AppConstants.spacing8,
+                      runSpacing: AppConstants.spacing8,
+                      children: [
+                        PriorityChip(
+                          priority: todo.priority,
+                          isSelected: true,
+                          onTap: () {},
+                        ),
+                        if (todo.dueDate != null)
+                          Chip(
+                            label: Text(
+                              'Due: ${todo.dueDate!.day}/${todo.dueDate!.month}/${todo.dueDate!.year}',
+                            ),
+                            avatar: Icon(Icons.calendar_today, size: 16),
+                          ),
+                        Chip(
+                          label: Text(todo.isCompleted ? 'Completed' : 'Pending'),
+                          avatar: Icon(
+                            todo.isCompleted ? Icons.check_circle : Icons.pending,
+                            size: 16,
+                          ),
+                        ),
+                      ],
+                    ),
+                    
+                    const SizedBox(height: AppConstants.spacing32),
+                    
+                    // Action buttons
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              _editTask(context, todo);
+                            },
+                            icon: Icon(Icons.edit),
+                            label: Text('Edit'),
+                          ),
+                        ),
+                        const SizedBox(width: AppConstants.spacing16),
+                        Expanded(
+                          child: FilledButton.icon(
+                            onPressed: () {
+                              context.read<TodoProvider>().toggleTodoComplete(todo);
+                              Navigator.pop(context);
+                            },
+                            icon: Icon(todo.isCompleted ? Icons.undo : Icons.check),
+                            label: Text(todo.isCompleted ? 'Mark Pending' : 'Mark Complete'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(width: AppConstants.paddingMedium),
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: onDelete,
-                  icon: const Icon(Icons.delete),
-                  label: const Text('Delete'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppConstants.errorColor,
-                    foregroundColor: Colors.white,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
+            );
+          },
+        ),
       ),
     );
   }

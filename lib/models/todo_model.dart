@@ -14,6 +14,7 @@ class Todo {
   final DateTime? completedAt;
   final int estimatedDuration; // in minutes
   final int? actualDuration; // in minutes
+  final List<String> tags; // Added tags property
 
   Todo({
     this.id,
@@ -31,6 +32,7 @@ class Todo {
     this.completedAt,
     this.estimatedDuration = 0,
     this.actualDuration,
+    this.tags = const [],
   });
 
   Map<String, dynamic> toMap() {
@@ -50,6 +52,7 @@ class Todo {
       'completedAt': completedAt?.millisecondsSinceEpoch,
       'estimatedDuration': estimatedDuration,
       'actualDuration': actualDuration,
+      'tags': tags.join(','),
     };
   }
 
@@ -76,6 +79,9 @@ class Todo {
           : null,
       estimatedDuration: map['estimatedDuration'] ?? 0,
       actualDuration: map['actualDuration'],
+      tags: map['tags'] != null && map['tags'].isNotEmpty
+          ? map['tags'].split(',').where((e) => e.isNotEmpty).toList()
+          : [],
     );
   }
 
@@ -95,6 +101,7 @@ class Todo {
     DateTime? completedAt,
     int? estimatedDuration,
     int? actualDuration,
+    List<String>? tags,
   }) {
     return Todo(
       id: id ?? this.id,
@@ -112,6 +119,7 @@ class Todo {
       completedAt: completedAt ?? this.completedAt,
       estimatedDuration: estimatedDuration ?? this.estimatedDuration,
       actualDuration: actualDuration ?? this.actualDuration,
+      tags: tags ?? this.tags,
     );
   }
 }
