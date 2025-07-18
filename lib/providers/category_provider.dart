@@ -1,16 +1,16 @@
 import 'package:flutter/foundation.dart';
-import '../models/category_model.dart';
+import '../models/category_model.dart' as CategoryModel;
 import '../models/tag_model.dart';
 import '../services/database_service.dart';
 
 class CategoryProvider with ChangeNotifier {
   final DatabaseService _databaseService = DatabaseService();
 
-  List<Category> _categories = [];
+  List<CategoryModel.Category> _categories = [];
   List<Tag> _tags = [];
   bool _isLoading = false;
 
-  List<Category> get categories => _categories;
+  List<CategoryModel.Category> get categories => _categories;
   List<Tag> get tags => _tags;
   bool get isLoading => _isLoading;
 
@@ -30,7 +30,7 @@ class CategoryProvider with ChangeNotifier {
   }
 
   // Category methods
-  Future<void> addCategory(Category category) async {
+  Future<void> addCategory(CategoryModel.Category category) async {
     try {
       final id = await _databaseService.insertCategory(category);
       final newCategory = category.copyWith(id: id);
@@ -41,7 +41,7 @@ class CategoryProvider with ChangeNotifier {
     }
   }
 
-  Future<void> updateCategory(Category category) async {
+  Future<void> updateCategory(CategoryModel.Category category) async {
     try {
       await _databaseService.updateCategory(category);
       final index = _categories.indexWhere((c) => c.id == category.id);
@@ -64,7 +64,7 @@ class CategoryProvider with ChangeNotifier {
     }
   }
 
-  Category? getCategoryById(int? id) {
+  CategoryModel.Category? getCategoryById(int? id) {
     if (id == null) return null;
     try {
       return _categories.firstWhere((c) => c.id == id);

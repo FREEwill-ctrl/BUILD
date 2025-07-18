@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../models/category_model.dart';
+import '../models/category_model.dart' as CategoryModel;
 
 class CategoryChip extends StatelessWidget {
-  final Category category;
+  final CategoryModel.Category category;
   final bool isSelected;
   final VoidCallback? onTap;
   final VoidCallback? onDelete;
@@ -66,9 +66,9 @@ class CategoryChip extends StatelessWidget {
 }
 
 class CategorySelector extends StatelessWidget {
-  final List<Category> categories;
-  final Category? selectedCategory;
-  final ValueChanged<Category?> onChanged;
+  final List<CategoryModel.Category> categories;
+  final CategoryModel.Category? selectedCategory;
+  final ValueChanged<CategoryModel.Category?> onChanged;
   final bool allowNone;
   final String? noneLabel;
 
@@ -106,10 +106,10 @@ class CategorySelector extends StatelessWidget {
 }
 
 class CategoryGrid extends StatelessWidget {
-  final List<Category> categories;
-  final ValueChanged<Category> onCategoryTap;
-  final ValueChanged<Category>? onCategoryLongPress;
-  final Category? selectedCategory;
+  final List<CategoryModel.Category> categories;
+  final ValueChanged<CategoryModel.Category> onCategoryTap;
+  final ValueChanged<CategoryModel.Category>? onCategoryLongPress;
+  final CategoryModel.Category? selectedCategory;
   final int crossAxisCount;
 
   const CategoryGrid({

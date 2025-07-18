@@ -323,7 +323,7 @@ class TodoProvider with ChangeNotifier {
     final onTime = completed.where((t) => 
         t.dueDate == null || (t.completedAt != null && t.completedAt!.isBefore(t.dueDate!))).length;
     
-    final baseScore = completed / total * 100;
+    final baseScore = completed.length / total * 100;
     final timeBonus = total > 0 ? (onTime / total) * 20 : 0;
     
     return (baseScore + timeBonus).clamp(0.0, 100.0);
