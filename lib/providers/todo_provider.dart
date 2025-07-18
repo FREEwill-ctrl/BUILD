@@ -1,7 +1,5 @@
 import 'package:flutter/foundation.dart';
 import '../models/todo_model.dart';
-import '../models/category_model.dart';
-import '../models/tag_model.dart';
 import '../models/recurring_model.dart';
 import '../services/database_service.dart';
 import '../services/notification_service.dart';
@@ -319,11 +317,11 @@ class TodoProvider with ChangeNotifier {
     final total = _todos.length;
     if (total == 0) return 0.0;
 
-    final completed = completedTodos;
-    final onTime = completed.where((t) => 
+    final completedList = _todos.where((todo) => todo.isCompleted).toList();
+    final onTime = completedList.where((t) => 
         t.dueDate == null || (t.completedAt != null && t.completedAt!.isBefore(t.dueDate!))).length;
     
-    final baseScore = completed.length / total * 100;
+    final baseScore = completedList.length / total * 100;
     final timeBonus = total > 0 ? (onTime / total) * 20 : 0;
     
     return (baseScore + timeBonus).clamp(0.0, 100.0);

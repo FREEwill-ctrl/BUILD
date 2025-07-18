@@ -22,32 +22,53 @@ class TagChip extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     
-    return FilterChip(
-      label: Text(
-        tag.name,
-        style: TextStyle(
-          fontSize: 11 * size,
-          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-          color: isSelected ? colorScheme.onSecondary : null,
-        ),
-      ),
-      selected: isSelected,
-      onSelected: onTap != null ? (_) => onTap!() : null,
-      onDeleted: onDelete,
-      deleteIcon: onDelete != null 
-          ? Icon(Icons.close, size: 14 * size)
-          : null,
-      backgroundColor: tag.colorValue.withOpacity(0.1),
-      selectedColor: tag.colorValue,
-      checkmarkColor: colorScheme.onSecondary,
-      side: BorderSide(
-        color: tag.colorValue.withOpacity(isSelected ? 1.0 : 0.3),
-        width: 1,
-      ),
-      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      visualDensity: VisualDensity.compact,
-      padding: EdgeInsets.symmetric(horizontal: 6 * size, vertical: 2 * size),
-    );
+    return onDelete != null
+        ? InputChip(
+            label: Text(
+              tag.name,
+              style: TextStyle(
+                fontSize: 11 * size,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                color: isSelected ? colorScheme.onSecondary : null,
+              ),
+            ),
+            selected: isSelected,
+            onPressed: onTap,
+            onDeleted: onDelete,
+            deleteIcon: Icon(Icons.close, size: 14 * size),
+            backgroundColor: tag.colorValue.withOpacity(0.1),
+            selectedColor: tag.colorValue,
+            checkmarkColor: colorScheme.onSecondary,
+            side: BorderSide(
+              color: tag.colorValue.withOpacity(isSelected ? 1.0 : 0.3),
+              width: 1,
+            ),
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.symmetric(horizontal: 6 * size, vertical: 2 * size),
+          )
+        : FilterChip(
+            label: Text(
+              tag.name,
+              style: TextStyle(
+                fontSize: 11 * size,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                color: isSelected ? colorScheme.onSecondary : null,
+              ),
+            ),
+            selected: isSelected,
+            onSelected: onTap != null ? (_) => onTap!() : null,
+            backgroundColor: tag.colorValue.withOpacity(0.1),
+            selectedColor: tag.colorValue,
+            checkmarkColor: colorScheme.onSecondary,
+            side: BorderSide(
+              color: tag.colorValue.withOpacity(isSelected ? 1.0 : 0.3),
+              width: 1,
+            ),
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.symmetric(horizontal: 6 * size, vertical: 2 * size),
+          );
   }
 }
 

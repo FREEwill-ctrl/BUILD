@@ -24,44 +24,77 @@ class CategoryChip extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     
-    return FilterChip(
-      label: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (showIcon) ...[
-            Icon(
-              category.icon,
-              size: 16 * size,
-              color: isSelected ? colorScheme.onPrimary : category.colorValue,
+    return onDelete != null
+        ? InputChip(
+            label: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (showIcon) ...[
+                  Icon(
+                    category.icon,
+                    size: 16 * size,
+                    color: isSelected ? colorScheme.onPrimary : category.colorValue,
+                  ),
+                  SizedBox(width: 4 * size),
+                ],
+                Text(
+                  category.name,
+                  style: TextStyle(
+                    fontSize: 12 * size,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                    color: isSelected ? colorScheme.onPrimary : null,
+                  ),
+                ),
+              ],
             ),
-            SizedBox(width: 4 * size),
-          ],
-          Text(
-            category.name,
-            style: TextStyle(
-              fontSize: 12 * size,
-              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-              color: isSelected ? colorScheme.onPrimary : null,
+            selected: isSelected,
+            onPressed: onTap,
+            onDeleted: onDelete,
+            deleteIcon: Icon(Icons.close, size: 16 * size),
+            backgroundColor: category.colorValue.withOpacity(0.1),
+            selectedColor: category.colorValue,
+            checkmarkColor: colorScheme.onPrimary,
+            side: BorderSide(
+              color: category.colorValue.withOpacity(isSelected ? 1.0 : 0.3),
+              width: 1,
             ),
-          ),
-        ],
-      ),
-      selected: isSelected,
-      onSelected: onTap != null ? (_) => onTap!() : null,
-      onDeleted: onDelete,
-      deleteIcon: onDelete != null 
-          ? Icon(Icons.close, size: 16 * size)
-          : null,
-      backgroundColor: category.colorValue.withOpacity(0.1),
-      selectedColor: category.colorValue,
-      checkmarkColor: colorScheme.onPrimary,
-      side: BorderSide(
-        color: category.colorValue.withOpacity(isSelected ? 1.0 : 0.3),
-        width: 1,
-      ),
-      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      visualDensity: VisualDensity.compact,
-    );
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            visualDensity: VisualDensity.compact,
+          )
+        : FilterChip(
+            label: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (showIcon) ...[
+                  Icon(
+                    category.icon,
+                    size: 16 * size,
+                    color: isSelected ? colorScheme.onPrimary : category.colorValue,
+                  ),
+                  SizedBox(width: 4 * size),
+                ],
+                Text(
+                  category.name,
+                  style: TextStyle(
+                    fontSize: 12 * size,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                    color: isSelected ? colorScheme.onPrimary : null,
+                  ),
+                ),
+              ],
+            ),
+            selected: isSelected,
+            onSelected: onTap != null ? (_) => onTap!() : null,
+            backgroundColor: category.colorValue.withOpacity(0.1),
+            selectedColor: category.colorValue,
+            checkmarkColor: colorScheme.onPrimary,
+            side: BorderSide(
+              color: category.colorValue.withOpacity(isSelected ? 1.0 : 0.3),
+              width: 1,
+            ),
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            visualDensity: VisualDensity.compact,
+          );
   }
 }
 
