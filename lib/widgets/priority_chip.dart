@@ -8,11 +8,11 @@ class PriorityChip extends StatelessWidget {
   final VoidCallback? onTap;
 
   const PriorityChip({
-    Key? key,
+    super.key,
     required this.priority,
     this.isSelected = false,
     this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

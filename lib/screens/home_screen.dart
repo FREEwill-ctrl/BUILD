@@ -14,7 +14,7 @@ import 'pomodoro_screen.dart';
 class HomeScreen extends StatefulWidget {
   final void Function(ThemeMode)? onThemeModeChanged;
   final ThemeMode? currentThemeMode;
-  const HomeScreen({Key? key, this.onThemeModeChanged, this.currentThemeMode}) : super(key: key);
+  const HomeScreen({super.key, this.onThemeModeChanged, this.currentThemeMode});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();

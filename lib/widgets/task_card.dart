@@ -12,13 +12,13 @@ class TaskCard extends StatefulWidget {
   final VoidCallback onEdit;
 
   const TaskCard({
-    Key? key,
+    super.key,
     required this.todo,
     required this.onTap,
     required this.onToggleComplete,
     required this.onDelete,
     required this.onEdit,
-  }) : super(key: key);
+  });
 
   @override
   State<TaskCard> createState() => _TaskCardState();
@@ -56,7 +56,7 @@ class _TaskCardState extends State<TaskCard>
     ));
 
     // Initial animation
-    Future.delayed(Duration(milliseconds: 50), () {
+    Future.delayed(const Duration(milliseconds: 50), () {
       if (mounted) {
         _animationController.forward();
       }

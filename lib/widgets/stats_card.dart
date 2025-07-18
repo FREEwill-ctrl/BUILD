@@ -9,11 +9,11 @@ class StatsCard extends StatefulWidget {
   final int pendingTodos;
 
   const StatsCard({
-    Key? key,
+    super.key,
     required this.totalTodos,
     required this.completedTodos,
     required this.pendingTodos,
-  }) : super(key: key);
+  });
 
   @override
   State<StatsCard> createState() => _StatsCardState();

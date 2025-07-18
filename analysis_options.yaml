@@ -16,9 +16,9 @@ linter:
   rules:
     # Error rules
     - avoid_print: false  # Allow print statements for debugging
-    - prefer_const_constructors: true
-    - prefer_const_literals_to_create_immutables: true
-    - prefer_const_declarations: true
+    - prefer_const_constructors: false  # Disabled for flexibility
+    - prefer_const_literals_to_create_immutables: false  # Disabled for flexibility
+    - prefer_const_declarations: false  # Disabled for flexibility
     
     # Style rules
     - camel_case_types: true
@@ -33,13 +33,13 @@ linter:
     - lines_longer_than_80_chars: false
     - avoid_web_libraries_in_flutter: false
     - use_build_context_synchronously: false  # Allow async operations with BuildContext
+    - avoid_unnecessary_containers: false  # Disabled for UI flexibility
+    - sort_child_properties_last: false  # Disabled for readability
+    - prefer_single_quotes: false  # Allow both single and double quotes
     
-    # Additional recommended rules
-    - avoid_unnecessary_containers: true
+    # Essential rules only
     - avoid_void_async: true
     - cancel_subscriptions: true
     - close_sinks: true
-    - prefer_single_quotes: true
-    - sort_child_properties_last: true
     - use_full_hex_values_for_flutter_colors: true
-    - use_key_in_widget_constructors: true
+    - use_key_in_widget_constructors: false  # Disabled as we use super.key

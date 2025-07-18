@@ -4,7 +4,7 @@ import '../providers/pomodoro_provider.dart';
 import '../utils/constants.dart';
 
 class PomodoroScreen extends StatefulWidget {
-  const PomodoroScreen({Key? key}) : super(key: key);
+  const PomodoroScreen({super.key});
 
   @override
   State<PomodoroScreen> createState() => _PomodoroScreenState();
